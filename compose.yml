@@ -1,0 +1,53 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile_inline: |
+        # Use an official Scala runtime as a parent image
+        FROM openjdk:8-jre
+        
+        # Set the working directory to /app
+        WORKDIR /app
+        
+        # Copy the current directory contents into the container at /app
+        COPY . /app
+        
+        # Install Scala
+        RUN echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | tee /etc/apt/sources.list.d/sbt.list && \
+          echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | tee /etc/apt/sources.list.d/sbt_old.list && \
+          curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | apt-key add && \
+          apt-get update -y && \
+          apt-get install -y sbt
+    ports:
+      - 9000:9000
+    command: ["sbt", "run"]
+    tty: true
+    environment:
+      - DATABASE_URL=jdbc:postgresql://localhost:5432/scala_play_development
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+  db:
+    build:
+      dockerfile: ./docker/db/Dockerfile
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=scala_play_development
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  db-data:
+
