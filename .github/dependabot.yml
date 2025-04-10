@@ -1,14 +1,5 @@
 version: 2
 updates:
-  # sbt dependencies
-  - package-ecosystem: "sbt"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    open-pull-requests-limit: 5
-    rebase-strategy: "auto"
-
-  # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
